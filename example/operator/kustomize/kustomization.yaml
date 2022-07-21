@@ -1,0 +1,8 @@
+resources:
+- databases.spotahome.com_redisfailovers.yaml
+- roles.yaml
+- rolebinding.yaml
+- operator.yaml
+- serviceaccount.yaml
+
+namespace: redis-failover
