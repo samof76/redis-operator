@@ -4,7 +4,7 @@ kind: Kustomization
 images:
 - name: redis-operator
   newName: samof76/redis-operator
-  newTag: 103465e80033b0674426f48e6ffe888bc231a3a7
+  newTag: latest
 
 # docker pull samof76/redis-operator:103465e80033b0674426f48e6ffe888bc231a3a7
 
