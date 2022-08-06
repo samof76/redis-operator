@@ -37,3 +37,8 @@ func GetSentinelName(rf *redisfailoverv1.RedisFailover) string {
 func generateName(typeName, metaName string) string {
 	return fmt.Sprintf("%s%s-%s", baseName, typeName, metaName)
 }
+
+// GetRedisPort return the port on which redis is running
+func GetRedisPort(rf *redisfailoverv1.RedisFailover) string {
+	return rf.Spec.Redis.Port
+}

@@ -41,6 +41,10 @@ func (r *RedisFailover) Validate() error {
 		r.Spec.Redis.Replicas = defaultRedisNumber
 	}
 
+	if r.Spec.Redis.Port == "" {
+		r.Spec.Redis.Port = defaultRedisPort
+	}
+
 	if r.Spec.Sentinel.Replicas <= 0 {
 		r.Spec.Sentinel.Replicas = defaultSentinelNumber
 	}

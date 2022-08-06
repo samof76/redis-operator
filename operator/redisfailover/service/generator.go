@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"bytes"
@@ -22,7 +23,7 @@ import (
 const (
 	redisConfigurationVolumeName = "redis-config"
 	// Template used to build the Redis configuration
-	redisConfigTemplate = `slaveof 127.0.0.1 6379
+	redisConfigTemplate = `slaveof 127.0.0.1 {{ .Spec.Redis.Port }}
 tcp-keepalive 60
 save 900 1
 save 300 10
@@ -296,7 +297,7 @@ func generateRedisStatefulSet(rf *redisfailoverv1.RedisFailover, labels map[stri
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "redis",
-									ContainerPort: 6379,
+									ContainerPort: getRedisPort(rf),
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},
@@ -711,6 +712,11 @@ func getDnsPolicy(dnspolicy corev1.DNSPolicy) corev1.DNSPolicy {
 
 func getQuorum(rf *redisfailoverv1.RedisFailover) int32 {
 	return rf.Spec.Sentinel.Replicas/2 + 1
+}
+
+func getRedisPort(rf *redisfailoverv1.RedisFailover) int32 {
+	port, _ := strconv.Atoi(rf.Spec.Redis.Port)
+	return int32(port)
 }
 
 func getRedisVolumeMounts(rf *redisfailoverv1.RedisFailover) []corev1.VolumeMount {

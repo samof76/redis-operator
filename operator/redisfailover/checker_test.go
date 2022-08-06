@@ -247,6 +247,11 @@ func TestCheckAndHeal(t *testing.T) {
 			bootstrapMasterPort := "6379"
 
 			rf := generateRF(false, bootstrappingTests)
+			fmt.Println("#####################################################")
+			fmt.Println(rf)
+
+			port := rf.Spec.Redis.Port
+
 			if bootstrappingTests {
 				allowSentinels = test.allowSentinels
 				rf.Spec.BootstrapNode.AllowSentinels = allowSentinels

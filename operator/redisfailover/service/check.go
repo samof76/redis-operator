@@ -86,8 +86,10 @@ func (r *RedisFailoverChecker) CheckAllSlavesFromMaster(master string, rf *redis
 		return err
 	}
 
+	port := GetRedisPort(rf)
+
 	for _, rip := range rips {
-		slave, err := r.redisClient.GetSlaveOf(rip, password)
+		slave, err := r.redisClient.GetSlaveOf(rip, port, password)
 		if err != nil {
 			return err
 		}
@@ -149,9 +151,11 @@ func (r *RedisFailoverChecker) GetMasterIP(rf *redisfailoverv1.RedisFailover) (s
 		return "", err
 	}
 
+	port := GetRedisPort(rf)
+
 	masters := []string{}
 	for _, rip := range rips {
-		master, err := r.redisClient.IsMaster(rip, password)
+		master, err := r.redisClient.IsMaster(rip, port, password)
 		if err != nil {
 			return "", err
 		}
@@ -179,8 +183,10 @@ func (r *RedisFailoverChecker) GetNumberMasters(rf *redisfailoverv1.RedisFailove
 		return nMasters, err
 	}
 
+	port := GetRedisPort(rf)
+
 	for _, rip := range rips {
-		master, err := r.redisClient.IsMaster(rip, password)
+		master, err := r.redisClient.IsMaster(rip, port, password)
 		if err != nil {
 			return nMasters, err
 		}
@@ -255,9 +261,11 @@ func (r *RedisFailoverChecker) GetRedisesSlavesPods(rf *redisfailoverv1.RedisFai
 		return redises, err
 	}
 
+	port := GetRedisPort(rf)
+
 	for _, rp := range rps.Items {
 		if rp.Status.Phase == corev1.PodRunning && rp.DeletionTimestamp == nil { // Only work with running
-			master, err := r.redisClient.IsMaster(rp.Status.PodIP, password)
+			master, err := r.redisClient.IsMaster(rp.Status.PodIP, port, password)
 			if err != nil {
 				return []string{}, err
 			}
@@ -281,9 +289,11 @@ func (r *RedisFailoverChecker) GetRedisesMasterPod(rFailover *redisfailoverv1.Re
 		return "", err
 	}
 
+	port := GetRedisPort(rFailover)
+
 	for _, rp := range rps.Items {
 		if rp.Status.Phase == corev1.PodRunning && rp.DeletionTimestamp == nil { // Only work with running
-			master, err := r.redisClient.IsMaster(rp.Status.PodIP, password)
+			master, err := r.redisClient.IsMaster(rp.Status.PodIP, port, password)
 			if err != nil {
 				return "", err
 			}
@@ -337,5 +347,7 @@ func (r *RedisFailoverChecker) CheckRedisSlavesReady(ip string, rFailover *redis
 		return false, err
 	}
 
-	return r.redisClient.SlaveIsReady(ip, password)
+	port := GetRedisPort(rFailover)
+
+	return r.redisClient.SlaveIsReady(ip, port, password)
 }

@@ -149,6 +149,7 @@ func (r *RedisFailoverHandler) CheckAndHeal(rf *redisfailoverv1.RedisFailover) e
 	if err != nil {
 		return err
 	}
+
 	if err2 := r.rfChecker.CheckAllSlavesFromMaster(master, rf); err2 != nil {
 		r.logger.Debug("Not all slaves have the same master")
 		if err3 := r.rfHealer.SetMasterOnAll(master, rf); err3 != nil {
@@ -165,6 +166,8 @@ func (r *RedisFailoverHandler) CheckAndHeal(rf *redisfailoverv1.RedisFailover) e
 		return err
 	}
 
+	port := rf.Spec.Redis.Port
+
 	sentinels, err := r.rfChecker.GetSentinelsIPs(rf)
 	if err != nil {
 		return err
@@ -172,7 +175,7 @@ func (r *RedisFailoverHandler) CheckAndHeal(rf *redisfailoverv1.RedisFailover) e
 	for _, sip := range sentinels {
 		if err := r.rfChecker.CheckSentinelMonitor(sip, master); err != nil {
 			r.logger.Debug("Sentinel is not monitoring the correct master")
-			if err := r.rfHealer.NewSentinelMonitor(sip, master, rf); err != nil {
+			if err := r.rfHealer.NewSentinelMonitorWithPort(sip, master, port, rf); err != nil {
 				return err
 			}
 		}

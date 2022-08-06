@@ -9,9 +9,10 @@ import (
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
-		name                   string
-		rfName                 string
-		rfBootstrapNode        *BootstrapSettings
+		name            string
+		rfName          string
+		rfBootstrapNode *BootstrapSettings
+		// rfRedisPort            string
 		rfRedisCustomConfig    []string
 		rfSentinelCustomConfig []string
 		expectedError          string
@@ -21,6 +22,11 @@ func TestValidate(t *testing.T) {
 			name:   "populates default values",
 			rfName: "test",
 		},
+		// {
+		// 	name:        "user redis customport",
+		// 	rfRedisPort: "12345",
+		// 	rfName:      "test-port",
+		// },
 		{
 			name:          "errors on too long of name",
 			rfName:        "some-super-absurdely-unnecessarily-long-name-that-will-most-definitely-fail",
@@ -71,6 +77,7 @@ func TestValidate(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			assert := assert.New(t)
 			rf := generateRedisFailover(test.rfName, test.rfBootstrapNode)
+			// rf.Spec.Redis.Port = test.rfRedisPort
 			rf.Spec.Redis.CustomConfig = test.rfRedisCustomConfig
 			rf.Spec.Sentinel.CustomConfig = test.rfSentinelCustomConfig
 
@@ -104,6 +111,7 @@ func TestValidate(t *testing.T) {
 						Redis: RedisSettings{
 							Image:    defaultImage,
 							Replicas: defaultRedisNumber,
+							Port:     defaultRedisPort,
 							Exporter: RedisExporter{
 								Image: defaultExporterImage,
 							},

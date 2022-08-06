@@ -47,7 +47,9 @@ func (r *RedisFailoverHealer) MakeMaster(ip string, rf *redisfailoverv1.RedisFai
 		return err
 	}
 
-	return r.redisClient.MakeMaster(ip, password)
+	port := GetRedisPort(rf)
+
+	return r.redisClient.MakeMaster(ip, port, password)
 }
 
 // SetOldestAsMaster puts all redis to the same master, choosen by order of appearance
@@ -70,17 +72,18 @@ func (r *RedisFailoverHealer) SetOldestAsMaster(rf *redisfailoverv1.RedisFailove
 		return err
 	}
 
+	port := GetRedisPort(rf)
 	newMasterIP := ""
 	for _, pod := range ssp.Items {
 		if newMasterIP == "" {
 			newMasterIP = pod.Status.PodIP
 			r.logger.Debugf("New master is %s with ip %s", pod.Name, newMasterIP)
-			if err := r.redisClient.MakeMaster(newMasterIP, password); err != nil {
+			if err := r.redisClient.MakeMaster(newMasterIP, port, password); err != nil {
 				return err
 			}
 		} else {
 			r.logger.Debugf("Making pod %s slave of %s", pod.Name, newMasterIP)
-			if err := r.redisClient.MakeSlaveOf(pod.Status.PodIP, newMasterIP, password); err != nil {
+			if err := r.redisClient.MakeSlaveOf(pod.Status.PodIP, port, newMasterIP, password); err != nil {
 				return err
 			}
 		}
@@ -100,15 +103,17 @@ func (r *RedisFailoverHealer) SetMasterOnAll(masterIP string, rf *redisfailoverv
 		return err
 	}
 
+	port := GetRedisPort(rf)
+
 	for _, pod := range ssp.Items {
 		if pod.Status.PodIP == masterIP {
 			r.logger.Debugf("Ensure pod %s is master", pod.Name)
-			if err := r.redisClient.MakeMaster(masterIP, password); err != nil {
+			if err := r.redisClient.MakeMaster(masterIP, port, password); err != nil {
 				return err
 			}
 		} else {
 			r.logger.Debugf("Making pod %s slave of %s", pod.Name, masterIP)
-			if err := r.redisClient.MakeSlaveOf(pod.Status.PodIP, masterIP, password); err != nil {
+			if err := r.redisClient.MakeSlaveOf(pod.Status.PodIP, port, masterIP, password); err != nil {
 				return err
 			}
 		}
@@ -129,9 +134,10 @@ func (r *RedisFailoverHealer) SetExternalMasterOnAll(masterIP, masterPort string
 		return err
 	}
 
+	port := GetRedisPort(rf)
 	for _, pod := range ssp.Items {
 		r.logger.Debugf("Making pod %s slave of %s:%s", pod.Name, masterIP, masterPort)
-		if err := r.redisClient.MakeSlaveOfWithPort(pod.Status.PodIP, masterIP, masterPort, password); err != nil {
+		if err := r.redisClient.MakeSlaveOfWithPort(pod.Status.PodIP, port, masterIP, masterPort, password); err != nil {
 			return err
 		}
 
@@ -149,7 +155,9 @@ func (r *RedisFailoverHealer) NewSentinelMonitor(ip string, monitor string, rf *
 		return err
 	}
 
-	return r.redisClient.MonitorRedis(ip, monitor, quorum, password)
+	port := GetRedisPort(rf)
+
+	return r.redisClient.MonitorRedisWithPort(ip, port, monitor, quorum, password)
 }
 
 // NewSentinelMonitorWithPort changes the master that Sentinel has to monitor by the provided IP and Port
@@ -186,7 +194,9 @@ func (r *RedisFailoverHealer) SetRedisCustomConfig(ip string, rf *redisfailoverv
 		return err
 	}
 
-	return r.redisClient.SetCustomRedisConfig(ip, rf.Spec.Redis.CustomConfig, password)
+	port := GetRedisPort(rf)
+
+	return r.redisClient.SetCustomRedisConfig(ip, port, rf.Spec.Redis.CustomConfig, password)
 }
 
 //DeletePod delete a failing pod so kubernetes relaunch it again
