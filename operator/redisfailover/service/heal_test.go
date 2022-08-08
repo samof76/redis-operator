@@ -366,14 +366,14 @@ func TestNewSentinelMonitor(t *testing.T) {
 
 			if test.errorOnMonitorRedis {
 				errorExpected = true
-				mr.On("MonitorRedis", "0.0.0.0", "1.1.1.1", "2", "").Once().Return(errors.New(""))
+				mr.On("MonitorRedisWithPort", "0.0.0.0", "1.1.1.1", "6379", "2", "").Once().Return(errors.New(""))
 			} else {
-				mr.On("MonitorRedis", "0.0.0.0", "1.1.1.1", "2", "").Once().Return(nil)
+				mr.On("MonitorRedisWithPort", "0.0.0.0", "1.1.1.1", "6379", "2", "").Once().Return(nil)
 			}
 
 			healer := rfservice.NewRedisFailoverHealer(ms, mr, log.DummyLogger{})
 
-			err := healer.NewSentinelMonitor("0.0.0.0", "1.1.1.1", rf)
+			err := healer.NewSentinelMonitorWithPort("0.0.0.0", "1.1.1.1", "6379", rf)
 
 			if errorExpected {
 				assert.Error(err)
