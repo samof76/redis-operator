@@ -425,7 +425,7 @@ func generateSentinelDeployment(rf *redisfailoverv1.RedisFailover, labels map[st
 				Spec: corev1.PodSpec{
 					Affinity:                  getAffinity(rf.Spec.Sentinel.Affinity, labels),
 					Tolerations:               rf.Spec.Sentinel.Tolerations,
-					TopologySpreadConstraints: rf.Spec.Redis.TopologySpreadConstraints,
+					TopologySpreadConstraints: rf.Spec.Sentinel.TopologySpreadConstraints,
 					NodeSelector:              rf.Spec.Sentinel.NodeSelector,
 					SecurityContext:           getSecurityContext(rf.Spec.Sentinel.SecurityContext),
 					HostNetwork:               rf.Spec.Sentinel.HostNetwork,
