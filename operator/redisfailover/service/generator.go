@@ -22,7 +22,8 @@ import (
 const (
 	redisConfigurationVolumeName = "redis-config"
 	// Template used to build the Redis configuration
-	redisConfigTemplate = `slaveof 127.0.0.1 6379
+	redisConfigTemplate = `slaveof 127.0.0.1 {{.Spec.Redis.Port}}
+port {{.Spec.Redis.Port}}
 tcp-keepalive 60
 save 900 1
 save 300 10
@@ -30,6 +31,11 @@ user pinger -@all +ping on >pingpass
 {{- range .Spec.Redis.CustomCommandRenames}}
 rename-command "{{.From}}" "{{.To}}"
 {{- end}}
+`
+	sentinelConfigTemplate = `sentinel monitor mymaster 127.0.0.1 {{.Spec.Redis.Port}} 2
+sentinel down-after-milliseconds mymaster 1000
+sentinel failover-timeout mymaster 3000
+sentinel parallel-syncs mymaster 2
 `
 	redisShutdownConfigurationVolumeName = "redis-shutdown-config"
 	redisReadinessVolumeName             = "redis-readiness-config"
@@ -109,10 +115,23 @@ func generateSentinelConfigMap(rf *redisfailoverv1.RedisFailover, labels map[str
 	namespace := rf.Namespace
 
 	labels = util.MergeLabels(labels, generateSelectorLabels(sentinelRoleName, rf.Name))
-	sentinelConfigFileContent := `sentinel monitor mymaster 127.0.0.1 6379 2
-sentinel down-after-milliseconds mymaster 1000
-sentinel failover-timeout mymaster 3000
-sentinel parallel-syncs mymaster 2`
+	//
+	// 	sentinelConfigFileContent := `sentinel monitor mymaster 127.0.0.1 6379 2
+	// sentinel down-after-milliseconds mymaster 1000
+	// sentinel failover-timeout mymaster 3000
+	// sentinel parallel-syncs mymaster 2`
+
+	tmpl, err := template.New("sentinel").Parse(sentinelConfigTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	var tplOutput bytes.Buffer
+	if err := tmpl.Execute(&tplOutput, rf); err != nil {
+		panic(err)
+	}
+
+	sentinelConfigFileContent := tplOutput.String()
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -304,7 +323,7 @@ func generateRedisStatefulSet(rf *redisfailoverv1.RedisFailover, labels map[stri
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "redis",
-									ContainerPort: getPort(rf),
+									ContainerPort: rf.Spec.Redis.Port,
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},
@@ -861,11 +880,4 @@ func getTerminationGracePeriodSeconds(rf *redisfailoverv1.RedisFailover) int64 {
 		return rf.Spec.Redis.TerminationGracePeriodSeconds
 	}
 	return 30
-}
-
-func getPort(rf *redisfailoverv1.RedisFailover) int32 {
-	if rf.Spec.Redis.Port > 0 {
-		return rf.Spec.Redis.Port
-	}
-	return 6379
 }
