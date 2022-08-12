@@ -181,6 +181,7 @@ func generateRedisConfigMap(rf *redisfailoverv1.RedisFailover, labels map[string
 
 func generateRedisShutdownConfigMap(rf *redisfailoverv1.RedisFailover, labels map[string]string, ownerRefs []metav1.OwnerReference) *corev1.ConfigMap {
 	name := GetRedisShutdownConfigMapName(rf)
+	port := rf.Spec.Redis.Port
 	namespace := rf.Namespace
 	rfName := strings.Replace(strings.ToUpper(rf.Name), "-", "_", -1)
 
@@ -191,12 +192,12 @@ if [ "$master" = "$(hostname -i)" ]; then
   sleep 31
   redis-cli -h ${RFS_%[1]v_SERVICE_HOST} -p ${RFS_%[1]v_SERVICE_PORT_SENTINEL} SENTINEL failover mymaster
 fi
-cmd="redis-cli"
+cmd="redis-cli -p %[2]v"
 if [ ! -z "${REDIS_PASSWORD}" ]; then
     cmd="${cmd} --no-auth-warning -a \"${REDIS_PASSWORD}\""
 fi
 save_command="${cmd} save"
-eval $save_command`, rfName)
+eval $save_command`, rfName, port)
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -212,49 +213,50 @@ eval $save_command`, rfName)
 }
 func generateRedisReadinessConfigMap(rf *redisfailoverv1.RedisFailover, labels map[string]string, ownerRefs []metav1.OwnerReference) *corev1.ConfigMap {
 	name := GetRedisReadinessName(rf)
+	port := rf.Spec.Redis.Port
 	namespace := rf.Namespace
 
 	labels = util.MergeLabels(labels, generateSelectorLabels(redisRoleName, rf.Name))
-	readinessContent := `ROLE="role"
-   ROLE_MASTER="role:master"
-   ROLE_SLAVE="role:slave"
-   IN_SYNC="master_sync_in_progress:1"
-   NO_MASTER="master_host:127.0.0.1"
+	readinessContent := fmt.Sprintf(`ROLE="role"
+ROLE_MASTER="role:master"
+ROLE_SLAVE="role:slave"
+IN_SYNC="master_sync_in_progress:1"
+NO_MASTER="master_host:127.0.0.1"
 
-   cmd="redis-cli"
-   if [ ! -z "${REDIS_PASSWORD}" ]; then
-        cmd="${cmd} --no-auth-warning -a \"${REDIS_PASSWORD}\""
-   fi
+cmd="redis-cli -p %[1]v"
+if [ ! -z "${REDIS_PASSWORD}" ]; then
+	cmd="${cmd} --no-auth-warning -a \"${REDIS_PASSWORD}\""
+fi
 
-   cmd="${cmd} info replication"
+cmd="${cmd} info replication"
 
-   check_master(){
-           exit 0
-   }
+check_master(){
+		exit 0
+}
 
-   check_slave(){
-           in_sync=$(echo "${cmd} | grep ${IN_SYNC} | tr -d \"\\r\" | tr -d \"\\n\"" | xargs -0 sh -c)
-           no_master=$(echo "${cmd} | grep ${NO_MASTER} | tr -d \"\\r\" | tr -d \"\\n\"" |  xargs -0 sh -c)
+check_slave(){
+		in_sync=$(echo "${cmd} | grep ${IN_SYNC} | tr -d \"\\r\" | tr -d \"\\n\"" | xargs -0 sh -c)
+		no_master=$(echo "${cmd} | grep ${NO_MASTER} | tr -d \"\\r\" | tr -d \"\\n\"" |  xargs -0 sh -c)
 
-           if [ -z "$in_sync" ] && [ -z "$no_master" ]; then
-                   exit 0
-           fi
+		if [ -z "$in_sync" ] && [ -z "$no_master" ]; then
+				exit 0
+		fi
 
-           exit 1
-   }
+		exit 1
+}
 
-   role=$(echo "${cmd} | grep $ROLE | tr -d \"\\r\" | tr -d \"\\n\"" | xargs -0 sh -c)
-   case $role in
-           $ROLE_MASTER)
-                   check_master
-                   ;;
-           $ROLE_SLAVE)
-                   check_slave
-                   ;;
-           *)
-                   echo "unespected"
-                   exit 1
-   esac`
+role=$(echo "${cmd} | grep $ROLE | tr -d \"\\r\" | tr -d \"\\n\"" | xargs -0 sh -c)
+case $role in
+		$ROLE_MASTER)
+				check_master
+				;;
+		$ROLE_SLAVE)
+				check_slave
+				;;
+		*)
+				echo "unespected"
+				exit 1
+esac`, port)
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
