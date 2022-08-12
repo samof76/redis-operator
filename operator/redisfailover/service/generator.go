@@ -304,7 +304,7 @@ func generateRedisStatefulSet(rf *redisfailoverv1.RedisFailover, labels map[stri
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "redis",
-									ContainerPort: 6379,
+									ContainerPort: getPort(rf),
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},
@@ -861,4 +861,11 @@ func getTerminationGracePeriodSeconds(rf *redisfailoverv1.RedisFailover) int64 {
 		return rf.Spec.Redis.TerminationGracePeriodSeconds
 	}
 	return 30
+}
+
+func getPort(rf *redisfailoverv1.RedisFailover) int32 {
+	if rf.Spec.Redis.Port > 0 {
+		return rf.Spec.Redis.Port
+	}
+	return 6379
 }

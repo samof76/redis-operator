@@ -4,7 +4,7 @@ kind: Kustomization
 images:
 - name: quay.io/spotahome/redis-operator
   newName: samof76/redis-operator
-  newTag: 5c4cb6df6a441cbb2be43151969e4267c2d7c547
+  newTag: 115172c59ba6621587f3f3e6c2c2dfaabd648d92
 
 # docker pull samof76/redis-operator:5c4cb6df6a441cbb2be43151969e4267c2d7c547
 resources:
