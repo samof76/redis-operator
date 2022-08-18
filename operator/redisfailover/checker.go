@@ -2,6 +2,7 @@ package redisfailover
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	redisfailoverv1 "github.com/spotahome/redis-operator/api/redisfailover/v1"
@@ -169,8 +170,10 @@ func (r *RedisFailoverHandler) CheckAndHeal(rf *redisfailoverv1.RedisFailover) e
 	if err != nil {
 		return err
 	}
+
+	port := getRedisPort(rf.Spec.Redis.Port)
 	for _, sip := range sentinels {
-		if err := r.rfChecker.CheckSentinelMonitor(sip, master); err != nil {
+		if err := r.rfChecker.CheckSentinelMonitor(sip, master, port); err != nil {
 			r.logger.Debug("Sentinel is not monitoring the correct master")
 			if err := r.rfHealer.NewSentinelMonitor(sip, master, rf); err != nil {
 				return err
@@ -259,4 +262,8 @@ func (r *RedisFailoverHandler) checkAndHealSentinels(rf *redisfailoverv1.RedisFa
 		}
 	}
 	return nil
+}
+
+func getRedisPort(p int32) string {
+	return strconv.Itoa(int(p))
 }
