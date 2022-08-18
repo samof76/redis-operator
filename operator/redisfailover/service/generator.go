@@ -115,11 +115,6 @@ func generateSentinelConfigMap(rf *redisfailoverv1.RedisFailover, labels map[str
 	namespace := rf.Namespace
 
 	labels = util.MergeLabels(labels, generateSelectorLabels(sentinelRoleName, rf.Name))
-	//
-	// 	sentinelConfigFileContent := `sentinel monitor mymaster 127.0.0.1 6379 2
-	// sentinel down-after-milliseconds mymaster 1000
-	// sentinel failover-timeout mymaster 3000
-	// sentinel parallel-syncs mymaster 2`
 
 	tmpl, err := template.New("sentinel").Parse(sentinelConfigTemplate)
 	if err != nil {
