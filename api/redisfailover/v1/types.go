@@ -42,6 +42,7 @@ type RedisSettings struct {
 	Replicas                      int32                             `json:"replicas,omitempty"`
 	Port                          int32                             `json:"port,omitempty"`
 	Resources                     corev1.ResourceRequirements       `json:"resources,omitempty"`
+	Sidecars                      []corev1.Container                `json:"sidecars,omitempty"`
 	CustomConfig                  []string                          `json:"customConfig,omitempty"`
 	CustomCommandRenames          []RedisCommandRename              `json:"customCommandRenames,omitempty"`
 	Command                       []string                          `json:"command,omitempty"`
@@ -72,6 +73,7 @@ type SentinelSettings struct {
 	Resources                 corev1.ResourceRequirements       `json:"resources,omitempty"`
 	CustomConfig              []string                          `json:"customConfig,omitempty"`
 	Command                   []string                          `json:"command,omitempty"`
+	Sidecars                  []corev1.Container                `json:"sidecars,omitempty"`
 	Affinity                  *corev1.Affinity                  `json:"affinity,omitempty"`
 	SecurityContext           *corev1.PodSecurityContext        `json:"securityContext,omitempty"`
 	ContainerSecurityContext  *corev1.SecurityContext           `json:"containerSecurityContext,omitempty"`
