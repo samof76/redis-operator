@@ -350,7 +350,7 @@ func generateRedisStatefulSet(rf *redisfailoverv1.RedisFailover, labels map[stri
 										Command: []string{
 											"sh",
 											"-c",
-											"redis-cli -h $(hostname) --user pinger --pass pingpass --no-auth-warning ping",
+											fmt.Sprintf("redis-cli -h $(hostname) -p %[1]v --user pinger --pass pingpass --no-auth-warning ping", rf.Spec.Redis.Port),
 										},
 									},
 								},
@@ -636,6 +636,13 @@ func createRedisExporterContainer(rf *redisfailoverv1.RedisFailover) corev1.Cont
 			},
 		})
 
+	}
+
+	if rf.Spec.Redis.Port != 6379 {
+		container.Env = append(container.Env, corev1.EnvVar{
+			Name:  "REDIS_ADDR",
+			Value: fmt.Sprintf("redis://localhost:%[1]v", rf.Spec.Redis.Port),
+		})
 	}
 
 	return container
