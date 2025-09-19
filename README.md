@@ -23,7 +23,7 @@ It can be done with plain old [deployment](example/operator), using [Kustomize](
 From the root folder of the project, execute the following:
 
 ```
-helm repo add redis-operator https://spotahome.github.io/redis-operator
+helm repo add redis-operator https://freshworks.github.io/redis-operator
 helm repo update
 helm install redis-operator redis-operator/redis-operator
 ```
@@ -99,7 +99,7 @@ In order to deploy a new redis-failover a [specification](example/redisfailover/
 
 ```
 REDIS_OPERATOR_VERSION=v1.2.4
-kubectl create -f https://raw.githubusercontent.com/spotahome/redis-operator/${REDIS_OPERATOR_VERSION}/example/redisfailover/basic.yaml
+kubectl create -f https://raw.githubusercontent.com/freshworks/redis-operator/${REDIS_OPERATOR_VERSION}/example/redisfailover/basic.yaml
 ```
 
 This redis-failover will be managed by the operator, resulting in the following elements created inside Kubernetes:
