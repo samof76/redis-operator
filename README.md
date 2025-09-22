@@ -10,7 +10,7 @@ Redis Operator creates/configures/manages redis-failovers atop Kubernetes.
 Kubernetes version: 1.21 or higher
 Redis version: 6 or higher
 
-Redis operator is being tested against kubernetes 1.25 1.26 1.27 and redis 6
+Redis operator is being tested against kubernetes 1.27.3, 1.28.13, 1.29.8, 1.30.4, 1.31.0, 1.32.0, 1.33.0 and redis 6
 All dependencies have been vendored, so there's no need to any additional download.
 
 ## Operator deployment on Kubernetes
@@ -33,7 +33,7 @@ helm install redis-operator redis-operator/redis-operator
 Helm chart only manage the creation of CRD in the first install. In order to update the CRD you will need to apply directly.
 
 ```
-REDIS_OPERATOR_VERSION=v1.3.0
+REDIS_OPERATOR_VERSION=v3.3.2
 kubectl replace -f https://raw.githubusercontent.com/freshworks/redis-operator/${REDIS_OPERATOR_VERSION}/manifests/databases.spotahome.com_redisfailovers.yaml
 ```
 
@@ -45,7 +45,7 @@ helm upgrade redis-operator redis-operator/redis-operator
 To create the operator, you can directly create it with kubectl:
 
 ```
-REDIS_OPERATOR_VERSION=v1.3.0
+REDIS_OPERATOR_VERSION=v3.3.2
 kubectl create -f https://raw.githubusercontent.com/freshworks/redis-operator/${REDIS_OPERATOR_VERSION}/manifests/databases.spotahome.com_redisfailovers.yaml
 kubectl apply -f https://raw.githubusercontent.com/freshworks/redis-operator/${REDIS_OPERATOR_VERSION}/example/operator/all-redis-operator-resources.yaml
 ```
@@ -70,7 +70,7 @@ Finally, you can install the `full` overlay if you want everything this operator
 It's always a good practice to pin the version of the operator in your configuration to make sure you are not surprised by changes on the latest development branch:
 
 ```shell
-kustomize build github.com/freshworks/redis-operator/manifests/kustomize/overlays/default?ref=v1.2.4
+kustomize build github.com/freshworks/redis-operator/manifests/kustomize/overlays/default?ref=v3.3.2
 ```
 
 You can easily create your own config by creating a `kustomization.yaml` file
